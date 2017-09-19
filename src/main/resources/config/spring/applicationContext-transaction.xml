@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <import resource="applicationContext-dao.xml"/>
+
+   	<bean id="txManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<!-- (this dependency is defined somewhere else) -->
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 启用AspectJ对Annotation的支持 -->
+	<aop:aspectj-autoproxy />
+
+	<!-- Transaction Support -->
+	<tx:advice id="useTxAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="*remove*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="*save*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="*modify*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="*create*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="*delete*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="*update*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="*add*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="creditNoticeEntry" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+
+			<tx:method name="*find*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="*get*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="*page*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="*count*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="*select*" propagation="SUPPORTS"
+				read-only="true" />
+			<tx:method name="*query*" propagation="SUPPORTS" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+
+	<!--把事务控制在Service层 -->
+	<aop:config>
+		<aop:pointcut id="pc"
+			expression="execution(public * cn.ljaer.ssm.service.*.*(..))" />
+		<aop:advisor pointcut-ref="pc" advice-ref="useTxAdvice" />
+	</aop:config>
+
+	<!-- 切面配置: Service层多数据源切换支持,在事务之前执行 -->
+	<bean class="cn.ljaer.ssm.datasource.aspect.DataSourceRoutingAspectProcessor" />
+</beans>
